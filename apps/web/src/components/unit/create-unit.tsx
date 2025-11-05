@@ -45,6 +45,7 @@ import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
+  useQuery,
 } from "@tanstack/react-query";
 import { Icons } from "../icons";
 import { Combobox } from "../ui/combobox";
@@ -79,6 +80,9 @@ const CreateUnit = ({
   projectId,
 }: Props) => {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [isBatch, setIsBatch] = useState<boolean>(false);
+  const [batchCode, setBatchCode] = useState<string>("");
+  const [batchCount, setBatchCount] = useState<number>(1);
   const [devicePartVariations, setDevicePartVariations] = useState<
     string[] | undefined
   >(undefined);
@@ -110,6 +114,33 @@ const CreateUnit = ({
     getPartVariationQueryOpts({ context: { workspace }, partVariationId }),
   );
 
+  const currentPartNumberRaw =
+    partVariations.find((m) => m.id === partVariationId)?.partNumber ?? "PART";
+  const currentPartNumber = currentPartNumberRaw.trim().replace(/\s+/g, "-");
+  const codeForPreview = (batchCode || "AA").toUpperCase().slice(0, 2);
+  const { data: preview } = useQuery({
+    queryKey: [
+      "produce-preview",
+      workspace.id,
+      partVariationId,
+      codeForPreview,
+    ],
+    queryFn: async () => {
+      const res = await client.unit.produce.preview.get({
+        query: { partVariationId, code: codeForPreview },
+        headers: { "flojoy-workspace-id": workspace.id },
+      });
+      if ((res as any).error) throw (res as any).error.value;
+      return (res as any).data as {
+        prefix: string;
+        next: string;
+        sample: string;
+      };
+    },
+    enabled: isBatch && codeForPreview.length === 2,
+  });
+  const previewSerial = preview?.sample ?? `${currentPartNumber}-${codeForPreview}-NNNNNN`;
+
   const form = useForm<FormSchema>({
     resolver: typeboxResolver(formSchema),
     defaultValues: {
@@ -118,6 +149,17 @@ const CreateUnit = ({
       components: [],
     },
   });
+
+  // Keep serialNumber non-empty when batch mode is on so client-side validation passes
+  useEffect(() => {
+    if (isBatch) {
+      form.clearErrors("serialNumber");
+      form.setValue("serialNumber", previewSerial);
+    } else {
+      form.setValue("serialNumber", "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBatch, previewSerial]);
 
   useEffect(() => {
     const devicePartVariations =
@@ -142,6 +184,55 @@ const CreateUnit = ({
   }
 
   function onSubmit(values: FormSchema) {
+    if (isBatch) {
+      const code = (batchCode || "").toUpperCase();
+      if (!/^[A-Z]{2}$/.test(code)) {
+        toast.error("Code must be two letters (A-Z)");
+        return;
+      }
+      const count = Number(batchCount) || 0;
+      if (count < 1 || count > 500) {
+        toast.error("Quantity must be between 1 and 500");
+        return;
+      }
+      toast.promise(
+        (async () => {
+          const { data, error } = await client.unit.produce.post(
+            {
+              code,
+              count,
+              partVariationId,
+              projectId,
+            },
+            { headers: { "flojoy-workspace-id": workspace.id } },
+          );
+          if (error) throw error;
+          return data as any;
+        })(),
+        {
+          loading: "Producing units...",
+          success: (data) => {
+            const serials = (data as any)?.serials as string[] | undefined;
+            queryClient.invalidateQueries({ queryKey: getUnitsQueryKey() });
+            queryClient.invalidateQueries({
+              queryKey: getPartVariationUnitQueryKey(partVariationId),
+            });
+            setIsDialogOpen(false);
+            if (serials && serials.length > 0) {
+              return `Created ${serials.length} units (${serials[0]} .. ${serials[serials.length - 1]})`;
+            }
+            return "Units created";
+          },
+          error: handleError,
+        },
+      );
+      return;
+    }
+    // Ensure serialNumber provided for single registration
+    if (!values.serialNumber || values.serialNumber.trim().length === 0) {
+      form.setError("serialNumber", { message: "Serial number is required" });
+      return;
+    }
     const devicePartVariations =
       getComponentPartVariationIds(partVariationTree);
     if (devicePartVariations.length > 0) {
@@ -195,21 +286,69 @@ const CreateUnit = ({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+            <div className="flex items-center gap-2">
+              <input
+                id="batch-toggle"
+                type="checkbox"
+                className="h-4 w-4"
+                checked={isBatch}
+                onChange={(e) => setIsBatch(e.target.checked)}
+              />
+              <FormLabel htmlFor="batch-toggle">Produce batch</FormLabel>
+            </div>
+
+            {isBatch ? (
+              <div className="grid grid-cols-2 gap-4">
+                <FormItem>
+                  <FormLabel>Code (2 letters)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g. AB"
+                      value={batchCode}
+                      onChange={(e) =>
+                        setBatchCode(e.target.value.toUpperCase().slice(0, 2))
+                      }
+                      maxLength={2}
+                    />
+                  </FormControl>
+                  <FormDescription>Used in serials (e.g. FP-AB-000123)</FormDescription>
+                </FormItem>
+                <FormItem>
+                  <FormLabel>Quantity</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={500}
+                      value={batchCount}
+                      onChange={(e) => setBatchCount(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormDescription>Number of units to produce</FormDescription>
+                </FormItem>
+              </div>
+            ) : null}
+
             <FormField
               control={form.control}
               name="serialNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Serial Number</FormLabel>
+                  <FormLabel>
+                    {isBatch ? "Serial Number (auto-generated)" : "Serial Number"}
+                  </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="e.g. SN4321"
+                      placeholder={isBatch ? previewSerial : "e.g. SN4321"}
                       {...field}
+                      disabled={isBatch}
                       data-1p-ignore
                     />
                   </FormControl>
                   <FormDescription>
-                    A unique identifier for this unit instance.
+                    {isBatch
+                      ? `Will be generated as ${previewSerial} (6 digits) for ${batchCount} unit(s).`
+                      : "A unique identifier for this unit instance."}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -219,6 +358,7 @@ const CreateUnit = ({
             {treeLoading ? (
               <Icons.spinner className="mx-auto animate-spin" />
             ) : (
+              !isBatch &&
               devicePartVariations !== undefined &&
               devicePartVariations.length > 0 && (
                 <div>

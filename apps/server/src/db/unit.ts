@@ -41,111 +41,120 @@ export async function createUnit(
 ) {
   return fromPromise(
     db.transaction().execute(async (tx) => {
-      const { components, projectId, ...newUnit } = unit;
-
-      const partVariation = await getPartVariation(unit.partVariationId);
-      if (!partVariation) {
-        throw new NotFoundError("PartVariation not found");
-      }
-
-      const created = await tx
-        .insertInto("unit")
-        .values({
-          id: generateDatabaseId("unit"),
-          workspaceId,
-          ...newUnit,
-        })
-        .returningAll()
-        .executeTakeFirst();
-      if (created === undefined) {
-        throw new InternalServerError("Failed to create unit");
-      }
-
-      const partVariationComponents = await getPartVariationComponents(
-        partVariation.id,
-      );
-
-      if (partVariationComponents.length > 0) {
-        const ids = components;
-        if (components.length === 0) {
-          throw new BadRequestError(
-            "Component list cannot be empty for this part variation",
-          );
-        }
-        if (ids.some((c) => c.length === 0)) {
-          throw new BadRequestError(
-            "Cannot have empty component ID in component list",
-          );
-        }
-        if (_.uniq(ids).length !== ids.length) {
-          throw new BadRequestError("Duplicate unit devices");
-        }
-
-        const units = await db
-          .selectFrom("unit")
-          .selectAll("unit")
-          .where("unit.id", "in", ids)
-          .where(notInUse)
-          .execute();
-
-        if (units.length !== components.length) {
-          throw new DuplicateError("Some unit devices are already in use!");
-        }
-
-        const partVariationCount = _.countBy(units, (h) => h.partVariationId);
-        const matches = _.every(
-          partVariationComponents,
-          (c) => partVariationCount[c.partVariationId] === c.count,
-        );
-        // TODO: Check that the keys match exactly
-
-        if (!matches) {
-          throw new BadRequestError(
-            "Components do not satisfy partVariation requirements",
-          );
-        }
-
-        await tx
-          .insertInto("unit_relation")
-          .values(
-            components.map((c) => ({
-              parentUnitId: created.id,
-              workspaceId,
-              childUnitId: c,
-            })),
-          )
-          .execute();
-
-        await tx
-          .insertInto("unit_revision")
-          .values(
-            components.map((c) => ({
-              unitId: created.id,
-              revisionType: "init",
-              componentId: c,
-              reason: "Initial unit creation",
-              userId: user.id,
-            })),
-          )
-          .execute();
-      }
-
-      if (projectId !== undefined) {
-        await tx
-          .insertInto("project_unit")
-          .values({
-            unitId: created.id,
-            projectId,
-          })
-          .execute();
-      }
-
-      await markUpdatedAt(tx, "workspace", workspaceId);
-
-      return created;
+      return await createUnitTx(tx, workspaceId, user, unit);
     }),
     (e) => e as RouteError,
   );
+}
+
+export async function createUnitTx(
+  tx: Kysely<DB>,
+  workspaceId: string,
+  user: User,
+  unit: InsertUnit,
+) {
+  const { components, projectId, ...newUnit } = unit;
+
+  const partVariation = await getPartVariation(unit.partVariationId);
+  if (!partVariation) {
+    throw new NotFoundError("PartVariation not found");
+  }
+
+  const created = await tx
+    .insertInto("unit")
+    .values({
+      id: generateDatabaseId("unit"),
+      workspaceId,
+      ...newUnit,
+    })
+    .returningAll()
+    .executeTakeFirst();
+  if (created === undefined) {
+    throw new InternalServerError("Failed to create unit");
+  }
+
+  const partVariationComponents = await getPartVariationComponents(
+    partVariation.id,
+  );
+
+  if (partVariationComponents.length > 0) {
+    const ids = components;
+    if (components.length === 0) {
+      throw new BadRequestError(
+        "Component list cannot be empty for this part variation",
+      );
+    }
+    if (ids.some((c) => c.length === 0)) {
+      throw new BadRequestError(
+        "Cannot have empty component ID in component list",
+      );
+    }
+    if (_.uniq(ids).length !== ids.length) {
+      throw new BadRequestError("Duplicate unit devices");
+    }
+
+    const units = await tx
+      .selectFrom("unit")
+      .selectAll("unit")
+      .where("unit.id", "in", ids)
+      .where(notInUse)
+      .execute();
+
+    if (units.length !== components.length) {
+      throw new DuplicateError("Some unit devices are already in use!");
+    }
+
+    const partVariationCount = _.countBy(units, (h) => h.partVariationId);
+    const matches = _.every(
+      partVariationComponents,
+      (c) => partVariationCount[c.partVariationId] === c.count,
+    );
+    // TODO: Check that the keys match exactly
+
+    if (!matches) {
+      throw new BadRequestError(
+        "Components do not satisfy partVariation requirements",
+      );
+    }
+
+    await tx
+      .insertInto("unit_relation")
+      .values(
+        components.map((c) => ({
+          parentUnitId: created.id,
+          workspaceId,
+          childUnitId: c,
+        })),
+      )
+      .execute();
+
+    await tx
+      .insertInto("unit_revision")
+      .values(
+        components.map((c) => ({
+          unitId: created.id,
+          revisionType: "init",
+          componentId: c,
+          reason: "Initial unit creation",
+          userId: user.id,
+        })),
+      )
+      .execute();
+  }
+
+  if (projectId !== undefined) {
+    await tx
+      .insertInto("project_unit")
+      .values({
+        unitId: created.id,
+        projectId,
+      })
+      .execute();
+  }
+
+  await markUpdatedAt(tx, "workspace", workspaceId);
+
+  return created;
 }
 
 export async function getUnitRevisions(unitId: string) {

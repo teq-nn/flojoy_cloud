@@ -34,7 +34,7 @@ export const AuthEntraRoute = new Elysia({
 
       entra_code_verifier.value = codeVerifier;
       entra_code_verifier.set({
-        secure: true, // set to false in localhost
+        secure: env.NODE_ENV === "production",
         path: "/",
         httpOnly: true,
         maxAge: 60 * 10, // 10 min

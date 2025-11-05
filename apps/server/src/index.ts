@@ -86,10 +86,10 @@ const app = new Elysia()
       status,
     });
   })
-  .onError(({ log, error }) => {
-    // NOTE: the onError hook only catches errors that have been thrown
-    // it won't catch errors that are simply returned.
-    log.error(error);
+  .onError((ctx) => {
+    // NOTE: the onError hook only catches thrown errors, not values returned.
+    // Use console.error to avoid depending on logger context in all versions.
+    console.error(ctx.error);
   })
   .use(UserRoute)
   .use(AuthRoute)

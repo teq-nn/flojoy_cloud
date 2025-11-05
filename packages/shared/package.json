@@ -3,7 +3,9 @@
   "version": "0.0.1",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
-  "dependencies": {},
+  "dependencies": {
+    "elysia": "1.0.10"
+  },
   "devDependencies": {
     "@cloud/tsconfig": "workspace:*",
     "@types/react": "^18.2.73",
