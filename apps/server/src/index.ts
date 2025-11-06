@@ -80,7 +80,10 @@ const app = new Elysia()
       ? SuperJSON.serialize(response)
       : { json: response, meta: undefined };
 
+    // Preserve headers set by previous plugins/middlewares (e.g., CORS)
+    const preserved = (set.headers ?? {}) as Record<string, string>;
     const headers: Record<string, string> = {
+      ...preserved,
       "Content-Type": "application/json; charset=utf-8",
       "Content-Encoding": "gzip",
     };
