@@ -31,11 +31,7 @@ const isElysiaErr = (
   return typeof res === "object" && res !== null && ELYSIA_RESPONSE in res;
 };
 
-const allowedOrigins = [getUrlFromUri(env.WEB_URI)];
-if (env.NODE_ENV !== "production") {
-  // Common dev host used by some Docker/Portainer setups
-  allowedOrigins.push("http://0.0.0.0:5173");
-}
+const allowedOrigins = [getUrlFromUri(env.WEB_URI), "http://localhost:5173", "http://0.0.0.0:5173", "http://127.0.0.1:5173"];
 
 const app = new Elysia()
   .derive((ctx) => fixCtxRequest(ctx.request))
@@ -44,7 +40,7 @@ const app = new Elysia()
     cors({
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-      origin: allowedOrigins,
+      origin: env.NODE_ENV === "production" ? allowedOrigins : ((requestOrigin) => requestOrigin ?? ""),
       allowedHeaders: [
         "content-type",
         "flojoy-workspace-id",
