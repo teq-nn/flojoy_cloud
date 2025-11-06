@@ -1,0 +1,8 @@
+node_modules
+**/.turbo
+**/dist
+.git
+.gitignore
+apps/server/.env
+apps/web/.env
+.env

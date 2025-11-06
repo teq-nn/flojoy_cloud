@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flojoy-cloud
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d flojoy-cloud"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  server:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://user:password@postgres:5432/flojoy-cloud
+      JWT_SECRET: change-me-in-prod
+      WEB_URI: http://localhost:4173
+      NODE_ENV: production
+      PORT: "3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    command: ["bun", "run", "--filter", "@cloud/server", "start"]
+
+  web:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      VITE_SERVER_URL: http://localhost:3000
+      PORT: "4173"
+    depends_on:
+      server:
+        condition: service_started
+    ports:
+      - "4173:4173"
+    command: ["bun", "run", "--filter", "@cloud/web", "start"]
