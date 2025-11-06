@@ -40,7 +40,10 @@ const app = new Elysia()
     cors({
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-      origin: env.NODE_ENV === "production" ? allowedOrigins : ((requestOrigin) => requestOrigin ?? ""),
+      origin:
+        env.NODE_ENV === "production"
+          ? allowedOrigins
+          : ((requestOrigin?: string) => (requestOrigin ? requestOrigin : false)),
       allowedHeaders: [
         "content-type",
         "flojoy-workspace-id",
