@@ -43,8 +43,7 @@ import {
 import { removePrefix } from "@/lib/string";
 import { Route as WorkspaceIndexRoute } from "@/routes/_protected/workspace/$namespace";
 import { PartVariation, PartVariationTreeNode } from "@cloud/shared";
-import { PartVariationMarket } from "@cloud/shared/src/schemas/public/PartVariationMarket";
-import { PartVariationType } from "@cloud/shared/src/schemas/public/PartVariationType";
+import { PartVariationMarket, PartVariationType } from "@cloud/shared";
 import {
   useQuery,
   useQueryClient,
@@ -273,7 +272,7 @@ function PartPage() {
         setDefaultValues({
           partNumber: removePrefix(tree.partNumber, part.name + "-"),
           hasComponents: tree.components.length > 0,
-          components: tree.components.map((c) => ({
+          components: tree.components.map((c: { count: number; partVariation: PartVariationTreeNode }) => ({
             count: c.count,
             partVariationId: c.partVariation.id,
           })),
@@ -382,7 +381,7 @@ function PartPage() {
                   <div className="w-3/5">
                     <DataTable
                       columns={partVariationComponentColumns}
-                      data={partVariationTree.components.map((child) => ({
+                      data={partVariationTree.components.map((child: { count: number; partVariation: PartVariationTreeNode }) => ({
                         count: child.count,
                         ...child.partVariation,
                       }))}

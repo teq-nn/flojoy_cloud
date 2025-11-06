@@ -14,7 +14,7 @@ import { Elysia, InternalServerError, error, t } from "elysia";
 import { DatabaseError } from "pg";
 import { checkWorkspacePerm } from "../lib/perm/workspace";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
-import { User } from "@cloud/shared/src/schemas/public/User";
+import { User } from "@cloud/shared";
 
 export const ProjectRoute = new Elysia({
   prefix: "/project",

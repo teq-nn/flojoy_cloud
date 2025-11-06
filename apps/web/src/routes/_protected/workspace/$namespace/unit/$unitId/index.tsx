@@ -23,7 +23,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
-import { Session } from "@cloud/shared/src/schemas/public/Session";
+import { Session } from "@cloud/shared";
 import CenterLoadingSpinner from "@/components/center-loading-spinner";
 import { getSessionsByUnitIdQueryOpts } from "@/lib/queries/session";
 import { DateTime } from "luxon";

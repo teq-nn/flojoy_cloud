@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flojoy-cloud
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d flojoy-cloud"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  server:
+    # IMPORTANT: This path must exist on the Docker node running Portainer
+    build:
+      context: /home/nilius/Code/Flojoy/flojoy_cloud
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Use the service name "postgres" for host resolution inside the stack network
+      DATABASE_URL: postgres://user:password@postgres:5432/flojoy-cloud
+      JWT_SECRET: change-me
+      WEB_URI: http://localhost:4173
+      NODE_ENV: production
+      PORT: "3000"
+      # Entra (Microsoft) OAuth — fill these if you enable Entra login
+      ENTRA_TENANT_ID: ""
+      ENTRA_CLIENT_ID: ""
+      ENTRA_CLIENT_SECRET: ""
+      ENTRA_REDIRECT_URI: http://localhost:3000/auth/entra/callback
+    ports:
+      - "3000:3000"
+    command: ["bun", "run", "--filter", "@cloud/server", "start"]
+
+  web:
+    # IMPORTANT: This path must exist on the Docker node running Portainer
+    build:
+      context: /home/nilius/Code/Flojoy/flojoy_cloud
+      dockerfile: Dockerfile
+      # If you need a custom API URL at build time, uncomment and set VITE_SERVER_URL
+      # args:
+      #   VITE_SERVER_URL: http://localhost:3000
+    restart: unless-stopped
+    depends_on:
+      server:
+        condition: service_started
+    environment:
+      PORT: "4173"
+    ports:
+      - "4173:4173"
+    command: ["bun", "run", "--filter", "@cloud/web", "start"]
+
+volumes:
+  pgdata: {}
+

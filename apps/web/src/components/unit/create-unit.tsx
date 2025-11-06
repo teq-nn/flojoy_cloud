@@ -68,7 +68,7 @@ type Props = {
 
 const getComponentPartVariationIds = (tree: PartVariationTreeRoot) => {
   // TODO: Only get depth 1
-  return tree.components.flatMap((m) =>
+  return tree.components.flatMap((m: { count: number; partVariation: PartVariationTreeRoot["components"][number]["partVariation"] }) =>
     new Array<string>(m.count).fill(m.partVariation.id),
   );
 };

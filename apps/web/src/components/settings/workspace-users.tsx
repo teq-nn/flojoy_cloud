@@ -56,7 +56,7 @@ import { Trash2 } from "lucide-react";
 import { client } from "@/lib/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useWorkspaceUser } from "@/hooks/use-workspace-user";
-import { UserInvite } from "@cloud/shared/src/schemas/public/UserInvite";
+import { UserInvite } from "@cloud/shared";
 
 type Props = {
   workspace: Workspace;

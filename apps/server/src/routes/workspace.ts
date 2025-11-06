@@ -14,8 +14,7 @@ import { AuthMiddleware } from "../middlewares/auth";
 import { WorkspaceMiddleware } from "../middlewares/workspace";
 import { checkWorkspacePerm } from "../lib/perm/workspace";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
-import { User } from "@cloud/shared/src/schemas/public/User";
-import { Workspace } from "@cloud/shared/src/schemas/public/Workspace";
+import { User, Workspace } from "@cloud/shared";
 
 export const WorkspaceRoute = new Elysia({
   prefix: "/workspace",

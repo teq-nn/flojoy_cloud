@@ -12,7 +12,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { client } from "@/lib/client";
 import { getSecretQueryKey } from "@/lib/queries/secret";
-import { UserSession } from "@cloud/shared/src/schemas/public/UserSession";
+import { UserSession } from "@cloud/shared";
 import { Input } from "../ui/input";
 import { toast } from "sonner";
 import { useEffect, useRef } from "react";

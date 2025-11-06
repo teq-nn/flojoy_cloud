@@ -27,8 +27,4 @@ COPY README.md ./
 RUN bun install
 RUN bun run build
 
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-ENTRYPOINT ["/entrypoint.sh"]
 CMD ["bun", "run", "start"]

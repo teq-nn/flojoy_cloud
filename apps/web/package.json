@@ -70,6 +70,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "lucia": "^3.1.1",
     "@types/lodash": "^4.17.0",
     "@faker-js/faker": "^8.4.1",
     "@tanstack/router-vite-plugin": "^1.25.0",

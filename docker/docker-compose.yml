@@ -1,4 +1,4 @@
-version: "3.9"
+version: '3.9'
 
 services:
   postgres:
@@ -8,6 +8,8 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: flojoy-cloud
+    volumes:
+      - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
@@ -23,11 +25,15 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgres://user:password@postgres:5432/flojoy-cloud
-      JWT_SECRET: change-me-in-prod
-      WEB_URI: http://localhost:4173
-      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-postgres://user:password@postgres:5432/flojoy-cloud}
+      JWT_SECRET: ${JWT_SECRET:?set_in_portainer_env}
+      WEB_URI: ${WEB_URI:-http://localhost:4173}
+      NODE_ENV: ${NODE_ENV:-production}
       PORT: "3000"
+      ENTRA_TENANT_ID: ${ENTRA_TENANT_ID:-}
+      ENTRA_CLIENT_ID: ${ENTRA_CLIENT_ID:-}
+      ENTRA_CLIENT_SECRET: ${ENTRA_CLIENT_SECRET:-}
+      ENTRA_REDIRECT_URI: ${ENTRA_REDIRECT_URI:-http://localhost:3000/auth/entra/callback}
     depends_on:
       postgres:
         condition: service_healthy
@@ -41,7 +47,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      VITE_SERVER_URL: http://localhost:3000
+      # VITE_SERVER_URL is build-time; change via build args if needed
       PORT: "4173"
     depends_on:
       server:
@@ -49,3 +55,6 @@ services:
     ports:
       - "4173:4173"
     command: ["bun", "run", "--filter", "@cloud/web", "start"]
+
+volumes:
+  pgdata: {}

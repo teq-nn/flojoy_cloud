@@ -17,7 +17,7 @@ import {
   BadRequestError,
   RouteError,
 } from "../lib/error";
-import { PartVariationType } from "@cloud/shared/src/schemas/public/PartVariationType";
+import { PartVariationType } from "@cloud/shared";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 async function getOrCreateType(
@@ -256,7 +256,11 @@ function buildPartVariationTree(
       nodes.set(edge.partVariationId, cur);
     }
 
-    if (parent.components.map((c) => c.partVariation).includes(cur)) {
+    if (
+      parent.components
+        .map((c: { count: number; partVariation: PartVariationTreeNode }) => c.partVariation)
+        .includes(cur)
+    ) {
       continue;
     }
 

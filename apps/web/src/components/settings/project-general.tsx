@@ -34,7 +34,7 @@ import { Input } from "@/components/ui/input";
 import { client } from "@/lib/client";
 import { getProjectQueryKey, getProjectsQueryKey } from "@/lib/queries/project";
 import { Perm } from "@cloud/shared";
-import { Project } from "@cloud/shared/src/schemas/public/Project";
+import { Project } from "@cloud/shared";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";

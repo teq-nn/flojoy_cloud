@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/context-menu";
 import CopyIdContextMenuItem from "@/components/copy-id-context-menu-item";
 import { Workspace } from "@cloud/shared";
-import { UserInvite } from "@cloud/shared/src/schemas/public/UserInvite";
+import { UserInvite } from "@cloud/shared";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { client } from "@/lib/client";
 import {

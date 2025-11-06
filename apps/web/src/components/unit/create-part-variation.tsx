@@ -26,8 +26,7 @@ import {
 } from "@/lib/queries/part-variation";
 import { handleError } from "@/lib/utils";
 import { Part, PartVariation, insertPartVariation } from "@cloud/shared";
-import { PartVariationMarket } from "@cloud/shared/src/schemas/public/PartVariationMarket";
-import { PartVariationType } from "@cloud/shared/src/schemas/public/PartVariationType";
+import { PartVariationMarket, PartVariationType } from "@cloud/shared";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Static, Type as t } from "@sinclair/typebox";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

@@ -40,6 +40,7 @@ import { getUnitQueryKey, getUnitsQueryOpts } from "@/lib/queries/unit";
 import {
   Workspace,
   UnitTreeRoot,
+  UnitTreeNode,
   SwapUnitComponent,
   swapUnitComponent,
 } from "@cloud/shared";
@@ -98,7 +99,7 @@ const SwapUnit = ({ workspace, unit }: Props) => {
 
   const selectedComponent = form.watch("oldUnitComponentId");
   const selectedPartVariation = unit.components.find(
-    (c) => c.id === selectedComponent,
+    (c: UnitTreeNode) => c.id === selectedComponent,
   )?.partVariationId;
   const swappable = selectedPartVariation
     ? availableUnit?.filter((h) => h.partVariationId === selectedPartVariation)
@@ -138,7 +139,7 @@ const SwapUnit = ({ workspace, unit }: Props) => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {unit.components.map((child) => (
+                        {unit.components.map((child: UnitTreeNode) => (
                           <SelectItem value={child.id} key={child.id}>
                             {child.serialNumber}
                           </SelectItem>

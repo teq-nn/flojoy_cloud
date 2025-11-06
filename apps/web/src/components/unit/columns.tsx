@@ -82,7 +82,7 @@ export const unitColumns: ColumnDef<
 
       return (
         <div>
-          {projects.map((p) => (
+          {projects.map((p: Project) => (
             <Badge key={p.id} variant="outline">
               {p.name}
             </Badge>

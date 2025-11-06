@@ -1,6 +1,6 @@
-import WorkspaceRole from "@cloud/shared/src/schemas/public/WorkspaceRole";
+import WorkspaceRole from "../schemas/public/WorkspaceRole";
 import { Permission } from "../types/perm";
-import ProjectRole from "@cloud/shared/src/schemas/public/ProjectRole";
+import ProjectRole from "../schemas/public/ProjectRole";
 
 export class Perm {
   _permission: Permission;
@@ -17,6 +17,7 @@ export class Perm {
       case "owner":
         return true;
     }
+    return false;
   }
 
   canWrite(): boolean {
@@ -28,6 +29,7 @@ export class Perm {
       case "owner":
         return true;
     }
+    return false;
   }
   canAdmin(): boolean {
     switch (this._permission) {
@@ -38,6 +40,7 @@ export class Perm {
       case "owner":
         return true;
     }
+    return false;
   }
   isOwner(): boolean {
     return this._permission === "owner";
