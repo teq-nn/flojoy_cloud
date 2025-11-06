@@ -30,14 +30,14 @@ services:
       # Use the service name "postgres" for host resolution inside the stack network
       DATABASE_URL: postgres://user:password@postgres:5432/flojoy-cloud
       JWT_SECRET: change-me
-      WEB_URI: localhost:5173
+      WEB_URI: 0.0.0.0:5173
       NODE_ENV: production
       PORT: "3000"
       # Entra (Microsoft) OAuth — fill these if you enable Entra login
       ENTRA_TENANT_ID: ""
       ENTRA_CLIENT_ID: ""
       ENTRA_CLIENT_SECRET: ""
-      ENTRA_REDIRECT_URI: http://localhost:3000/auth/entra/callback
+      ENTRA_REDIRECT_URI: http://0.0.0.0:3000/auth/entra/callback
     ports:
       - "3000:3000"
     command: ["bun", "run", "--filter", "@cloud/server", "start"]
@@ -49,7 +49,7 @@ services:
       dockerfile: Dockerfile
       # If you need a custom API URL at build time, uncomment and set VITE_SERVER_URL
       # args:
-      #   VITE_SERVER_URL: http://localhost:3000
+      #   VITE_SERVER_URL: http://0.0.0.0:3000
     restart: unless-stopped
     depends_on:
       server:

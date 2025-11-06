@@ -27,13 +27,13 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgres://user:password@postgres:5432/flojoy-cloud}
       JWT_SECRET: ${JWT_SECRET:?set_in_portainer_env}
-      WEB_URI: ${WEB_URI:-localhost:5173}
+      WEB_URI: ${WEB_URI:-0.0.0.0:5173}
       NODE_ENV: ${NODE_ENV:-production}
       PORT: "3000"
       ENTRA_TENANT_ID: ${ENTRA_TENANT_ID:-}
       ENTRA_CLIENT_ID: ${ENTRA_CLIENT_ID:-}
       ENTRA_CLIENT_SECRET: ${ENTRA_CLIENT_SECRET:-}
-      ENTRA_REDIRECT_URI: ${ENTRA_REDIRECT_URI:-http://localhost:3000/auth/entra/callback}
+      ENTRA_REDIRECT_URI: ${ENTRA_REDIRECT_URI:-http://0.0.0.0:3000/auth/entra/callback}
     depends_on:
       postgres:
         condition: service_healthy

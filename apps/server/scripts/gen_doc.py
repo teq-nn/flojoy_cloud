@@ -211,7 +211,7 @@ client.delete_test("TEST_ID")
 
 
 def get_openapi_spec():
-    res = requests.get("http://localhost:3000/api/openapi.json")
+    res = requests.get("http://0.0.0.0:3000/api/openapi.json")
     return res.json()
 
 

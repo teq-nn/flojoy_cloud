@@ -10,7 +10,7 @@ WorkspaceInfo = Tuple[FlojoyCloud, str]
 # Set all of these variables to run the tests
 # This should be run in a completely fresh/empty workspace.
 WORKSPACE_SECRET = ""
-API_URL = "http://localhost:3000/api/v1"
+API_URL = "http://0.0.0.0:3000/api/v1"
 WORKSPACE_ID = ""
 
 runnable = WORKSPACE_SECRET != "" and API_URL != "" and WORKSPACE_ID != ""

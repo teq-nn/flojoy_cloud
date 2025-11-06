@@ -7,7 +7,7 @@ export const env = createEnv({
    * a type-level and at runtime.
    */
   server: {
-    WEB_URI: z.string().default("localhost:5173"),
+    WEB_URI: z.string().default("0.0.0.0:5173"),
     JWT_SECRET: z.string(),
     PORT: z.string().default("3000"),
     DATABASE_URL: z
@@ -26,7 +26,7 @@ export const env = createEnv({
     GOOGLE_REDIRECT_URI: z
       .string()
       .url()
-      .default("http://localhost:3000/auth/google/callback"),
+      .default("http://0.0.0.0:3000/auth/google/callback"),
 
     ENTRA_TENANT_ID: z.string().default(""),
     ENTRA_CLIENT_ID: z.string().default(""),
@@ -34,7 +34,7 @@ export const env = createEnv({
     ENTRA_REDIRECT_URI: z
       .string()
       .url()
-      .default("http://localhost:3000/auth/entra/callback"),
+      .default("http://0.0.0.0:3000/auth/entra/callback"),
   },
 
   /**
