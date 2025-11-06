@@ -27,7 +27,7 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgres://user:password@postgres:5432/flojoy-cloud}
       JWT_SECRET: ${JWT_SECRET:?set_in_portainer_env}
-      WEB_URI: ${WEB_URI:-http://localhost:4173}
+      WEB_URI: ${WEB_URI:-localhost:5173}
       NODE_ENV: ${NODE_ENV:-production}
       PORT: "3000"
       ENTRA_TENANT_ID: ${ENTRA_TENANT_ID:-}
@@ -48,12 +48,12 @@ services:
     restart: unless-stopped
     environment:
       # VITE_SERVER_URL is build-time; change via build args if needed
-      PORT: "4173"
+      PORT: "5173"
     depends_on:
       server:
         condition: service_started
     ports:
-      - "4173:4173"
+      - "5173:5173"
     command: ["bun", "run", "--filter", "@cloud/web", "start"]
 
 volumes:

@@ -30,7 +30,7 @@ services:
       # Use the service name "postgres" for host resolution inside the stack network
       DATABASE_URL: postgres://user:password@postgres:5432/flojoy-cloud
       JWT_SECRET: change-me
-      WEB_URI: http://localhost:4173
+      WEB_URI: localhost:5173
       NODE_ENV: production
       PORT: "3000"
       # Entra (Microsoft) OAuth — fill these if you enable Entra login
@@ -55,11 +55,10 @@ services:
       server:
         condition: service_started
     environment:
-      PORT: "4173"
+      PORT: "5173"
     ports:
-      - "4173:4173"
+      - "5173:5173"
     command: ["bun", "run", "--filter", "@cloud/web", "start"]
 
 volumes:
   pgdata: {}
-
