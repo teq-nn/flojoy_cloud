@@ -1,16 +1,81 @@
-version: "3.9"
-
 services:
-  postgres:
-    image: postgres:16-alpine
-    ports:
-      - 5432:5432
-    environment:
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_USER=user
-      - POSTGRES_DB=flojoy-cloud
+  bootstrap:
+    image: oven/bun:1
+    container_name: flojoy_bootstrap_dev
+    working_dir: /repo
+    command: sh -lc "bun install"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ./:/repo
+    restart: "no"
+
+  migrate:
+    image: oven/bun:1
+    container_name: flojoy_migrate_dev
+    working_dir: /repo/apps/server
+    command: sh -lc "bun run migrate:to-latest"
+    volumes:
+      - ./:/repo
+    env_file:
+      - ./apps/server/.env
+    environment:
+      DATABASE_URL: postgres://user:password@db:5432/flojoy-cloud
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+
+  db:
+    image: postgres:16-alpine
+    container_name: flojoy_db_dev
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flojoy-cloud
+    ports: ["5432:5432"]
+    volumes: [pgdata_dev:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d flojoy-cloud"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  server:
+    image: oven/bun:1
+    container_name: flojoy_server_dev
+    working_dir: /repo/apps/server
+    command: sh -lc "bun run dev"
+    volumes:
+      - ./:/repo
+    env_file:
+      - ./apps/server/.env
+    environment:
+      DATABASE_URL: postgres://user:password@db:5432/flojoy-cloud
+      PORT: 3000
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+    ports: ["3000:3000"]
+
+  web:
+    image: oven/bun:1
+    container_name: flojoy_web_dev
+    working_dir: /repo/apps/web
+    command: sh -lc "bun run dev -- --host"
+    volumes:
+      - ./:/repo
+    env_file:
+      - ./apps/web/.env
+    environment:
+      VITE_SERVER_URL: http://localhost:3000
+    ports: ["5173:5173"]
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+      server:
+        condition: service_started
 
 volumes:
-  pgdata:
+  pgdata_dev:
