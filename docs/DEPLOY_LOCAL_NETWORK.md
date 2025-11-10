@@ -20,6 +20,9 @@ On the machine that will run the API and DB:
     - `JWT_SECRET=...` (required)
     - `DATABASE_URL=postgresql://user:password@db:5432/flojoy-cloud` (or keep default)
     - `WEB_URI=http://<WEB_HOST_IP>` (must match the browser origin exactly, e.g. `http://192.168.1.20`)
+    - If using Microsoft Entra from other devices, Entra requires HTTPS for non-localhost:
+      - Use a hostname and TLS (see below) and set `WEB_URI=https://<HOSTNAME>`.
+      - Set `ENTRA_REDIRECT_URI=https://<HOSTNAME>/auth/entra/callback`.
 
 - Bring up server + db:
 
@@ -58,6 +61,17 @@ Version Compatibility & Build Behavior
   - `@tanstack/router-vite-plugin`: 1.25.0
 - If you hit TypeScript errors like “Please install Elysia before using Eden”, ensure the versions above are pinned. Mixing Eden >=1.4.x with Elysia 1.0.x will fail type checks.
 - Husky may warn "git command not found" during container builds. This is harmless; set `HUSKY=0` to silence.
+
+HTTPS & Entra (Microsoft Login)
+- For non-localhost Entra redirects, configure HTTPS for the web host:
+  - Terminate TLS in nginx on the web host (`apps/web/nginx.conf`): listen on 443 with your certificate.
+  - Proxy the API and Entra callbacks through nginx to the server container:
+    - `location /api { proxy_pass http://flojoy_server:3000; }`
+    - `location /auth/entra/ { proxy_pass http://flojoy_server:3000; }`
+  - Set envs:
+    - Web: `VITE_SERVER_URL=/api`
+    - Server: `WEB_URI=https://<HOSTNAME>`, `ENTRA_REDIRECT_URI=https://<HOSTNAME>/auth/entra/callback`
+  - Register the exact `https://<HOSTNAME>/auth/entra/callback` in Entra App registrations.
 
 Same-Host, Single Compose, and Optional Proxy
 - If both web and server run on the same machine and you want users to access the web via `http://<HOST_IP>`:

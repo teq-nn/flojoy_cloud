@@ -31,6 +31,19 @@
 5. Permissions: Microsoft Graph delegated `openid`, `profile`, `email` (consent if required).
 6. Ensure `ENTRA_REDIRECT_URI=http://localhost:3000/auth/entra/callback` in `.env`.
 
+### Entra over HTTPS (non-localhost)
+- Entra requires an HTTPS redirect URI for non-localhost hosts. For access from other devices or production:
+  - Choose a hostname (e.g., `cloud.local` or a real domain) and serve the site over HTTPS.
+  - Set in `apps/server/.env`:
+    - `WEB_URI=https://<HOSTNAME>`
+    - `ENTRA_REDIRECT_URI=https://<HOSTNAME>/auth/entra/callback`
+  - Recommended: proxy the API through nginx on the same HTTPS origin to avoid CORS:
+    - `apps/web/.env` → `VITE_SERVER_URL=/api`
+    - In `apps/web/nginx.conf`, add:
+      - `location /api { proxy_pass http://flojoy_server:3000; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; }`
+      - `location /auth/entra/ { proxy_pass http://flojoy_server:3000; proxy_set_header Host $host; }`
+  - Terminate TLS in nginx (self-signed for LAN via mkcert or a real cert for public). Expose port 443 and point Entra to `https://<HOSTNAME>/auth/entra/callback`.
+
 ## Google OAuth (Google Login)
 1. Google Cloud Console → APIs & Services → Credentials → Create OAuth client ID.
 2. Application type: Web application.
