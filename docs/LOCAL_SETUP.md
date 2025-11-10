@@ -51,3 +51,18 @@
 ## Notes
 - CORS uses `WEB_URI`; if you change the web port/host, update and restart the server.
 - For localhost, secure cookies are disabled automatically in dev so OAuth callbacks work over HTTP.
+
+## Version Compatibility
+- Eden/Elysia:
+  - `elysia`: 1.0.10
+  - `@elysiajs/eden`: 1.0.8
+  - Using newer Eden versions (>=1.4.x) with Elysia 1.0.x causes a TypeScript error like: “Please install Elysia before using Eden”. If you see this, pin Eden to 1.0.8 or upgrade Elysia across the repo.
+- TanStack Router:
+  - `@tanstack/react-router`: 1.26.18
+  - `@tanstack/router-devtools`: 1.26.18
+  - `@tanstack/router-vite-plugin`: 1.25.0
+  - Newer 1.13x versions change context/params inference and will break type checks in this codebase.
+
+## Docker Notes
+- The web compose file installs dependencies at the monorepo root to dedupe workspace deps. Run from the repo root when using compose.
+- Husky warning during install ("git command not found") is harmless inside containers. To silence: set `HUSKY=0` in the environment for the build step.
