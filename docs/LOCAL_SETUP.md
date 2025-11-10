@@ -66,3 +66,21 @@
 ## Docker Notes
 - The web compose file installs dependencies at the monorepo root to dedupe workspace deps. Run from the repo root when using compose.
 - Husky warning during install ("git command not found") is harmless inside containers. To silence: set `HUSKY=0` in the environment for the build step.
+
+## Access From Other Devices (LAN)
+- When you want to access the UI from another device on your network:
+  - Set `apps/web/.env` → `VITE_SERVER_URL=http://<HOST_IP>:3000`
+  - Set `apps/server/.env` → `WEB_URI=http://<HOST_IP>`
+  - Rebuild the web SPA (value is embedded at build time):
+    - `docker compose -f docker-compose.web.yml up --build -d --force-recreate`
+  - Restart the server (to pick up `WEB_URI`):
+    - `docker compose -f docker-compose.server.yml up -d --force-recreate`
+  - Then open `http://<HOST_IP>` from other devices.
+
+### Optional: Avoid Rebuilds via Proxy
+- You can avoid IP-specific rebuilds by letting nginx proxy to the API:
+  - Set `apps/web/.env` → `VITE_SERVER_URL=/api`
+  - In `apps/web/nginx.conf`, add a proxy location (example):
+    - `location /api { proxy_pass http://flojoy_server:3000; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; }`
+  - Start both stacks in one network: `docker compose -f docker-compose.server.yml -f docker-compose.web.yml up --build -d`
+  - Now the browser uses same-origin `/api` (no CORS), and nginx forwards to the server.

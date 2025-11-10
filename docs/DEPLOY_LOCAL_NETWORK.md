@@ -33,7 +33,7 @@ On the machine that will serve the web app:
 
 - Create web env file:
   - Copy `apps/web/.env.example` to `apps/web/.env`.
-  - Set `VITE_SERVER_URL=http://<SERVER_HOST_IP>:3000`.
+  - Set `VITE_SERVER_URL=http://<SERVER_HOST_IP>:3000` (use the server machine's IP so other devices don't call their own `localhost`).
 
 - Build and serve the web app:
 
@@ -58,6 +58,17 @@ Version Compatibility & Build Behavior
   - `@tanstack/router-vite-plugin`: 1.25.0
 - If you hit TypeScript errors like “Please install Elysia before using Eden”, ensure the versions above are pinned. Mixing Eden >=1.4.x with Elysia 1.0.x will fail type checks.
 - Husky may warn "git command not found" during container builds. This is harmless; set `HUSKY=0` to silence.
+
+Same-Host, Single Compose, and Optional Proxy
+- If both web and server run on the same machine and you want users to access the web via `http://<HOST_IP>`:
+  - Server CORS `WEB_URI` must equal `http://<HOST_IP>`.
+  - Web `VITE_SERVER_URL` must point to `http://<HOST_IP>:3000` unless you proxy.
+- To avoid rebuilding when the host IP changes, configure nginx to proxy API calls:
+  - Set `VITE_SERVER_URL=/api` in `apps/web/.env` and add to `apps/web/nginx.conf`:
+    - `location /api { proxy_pass http://flojoy_server:3000; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; }`
+  - Start both stacks in one network:
+    - `docker compose -f docker-compose.server.yml -f docker-compose.web.yml up --build -d`
+  - Now the UI uses same-origin `/api` and no CORS configuration is required.
 
 Troubleshooting
 - Ports not reachable from other machines: Ensure host firewalls allow 80 and 3000. Use the host IP (e.g., `192.168.1.x`) not `localhost`.
