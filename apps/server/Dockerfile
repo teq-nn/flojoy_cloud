@@ -2,29 +2,31 @@
 FROM oven/bun:1 AS base
 WORKDIR /app
 
-# Copy only the server package and repo lockfiles to speed up caching.
-# If you have a root package.json/bun.lockb that matters for workspace resolution,
-# bring them in as well.
-COPY bun.lockb package.json turbo.json ./
-COPY apps/server/package.json apps/server/bun.lockb ./apps/server/
-# If you rely on workspaces, also copy the relevant packages; otherwise, copy the server app later.
-# Install only server deps
+# Copy root and workspace package manifests for dependency resolution
+COPY package.json turbo.json ./
+COPY apps/server/package.json ./apps/server/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/tsconfig/package.json ./packages/tsconfig/
+COPY packages/eslint-config/package.json ./packages/eslint-config/
+
+# Install workspace deps at the monorepo root so workspace:* links resolve
+RUN bun install
+
+# Now bring in the actual sources needed to build the server
+COPY packages/shared ./packages/shared
+COPY apps/server ./apps/server
+
+# Build the server
 WORKDIR /app/apps/server
-RUN bun install --frozen-lockfile
+RUN bun run build
 
 # ---------- runtime ----------
 FROM oven/bun:1 AS runtime
 WORKDIR /app
 
-# Copy installed deps and app source
-COPY --from=base /app/apps/server/node_modules /app/apps/server/node_modules
-COPY apps/server /app/apps/server
+# Bring the full /app from build stage to preserve workspace links and sources
+COPY --from=base /app /app
 
 WORKDIR /app/apps/server
-
-# Optional: if your server exposes a health endpoint at /health, keep it.
 EXPOSE 3000
-
-# Run migrations before start; fail fast on error
-# Adjust the script names if they differ.
-CMD bun run migrate:to-latest && bun run start
+CMD ["bun","run","start"]
