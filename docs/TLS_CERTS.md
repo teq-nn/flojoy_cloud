@@ -71,8 +71,7 @@ docker compose -f docker-compose.server.yml -f docker-compose.web.tls.yml up --b
 ```
 
 Set envs for HTTPS and Entra:
-- `apps/web/.env`: `VITE_SERVER_URL=/api`
+- `apps/web/.env`: `VITE_SERVER_URL=https://<HOSTNAME>/api`
 - `apps/server/.env`: `WEB_URI=https://<HOSTNAME>` and `ENTRA_REDIRECT_URI=https://<HOSTNAME>/auth/entra/callback`
 
 Visit `https://<HOSTNAME>`.
-

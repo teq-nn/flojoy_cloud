@@ -38,7 +38,7 @@
     - `WEB_URI=https://<HOSTNAME>`
     - `ENTRA_REDIRECT_URI=https://<HOSTNAME>/auth/entra/callback`
   - Recommended: proxy the API through nginx on the same HTTPS origin to avoid CORS:
-    - `apps/web/.env` → `VITE_SERVER_URL=/api`
+    - `apps/web/.env` → `VITE_SERVER_URL=https://<HOSTNAME>/api`
     - In `apps/web/nginx.conf`, add:
       - `location /api { proxy_pass http://flojoy_server:3000; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; }`
       - `location /auth/entra/ { proxy_pass http://flojoy_server:3000; proxy_set_header Host $host; }`
@@ -92,7 +92,7 @@
 
 ### Optional: Avoid Rebuilds via Proxy
 - You can avoid IP-specific rebuilds by letting nginx proxy to the API:
-  - Set `apps/web/.env` → `VITE_SERVER_URL=/api`
+  - Set `apps/web/.env` → `VITE_SERVER_URL=http://<HOST_IP>/api` (or `https://<HOSTNAME>/api` with TLS)
   - In `apps/web/nginx.conf`, add a proxy location (example):
     - `location /api { proxy_pass http://flojoy_server:3000; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; }`
   - Start both stacks in one network: `docker compose -f docker-compose.server.yml -f docker-compose.web.yml up --build -d`
@@ -107,7 +107,7 @@
   1) Generate or obtain certs and place them in `nginx/certs/` as `fullchain.pem` and `privkey.pem`.
      - See `docs/TLS_CERTS.md` for mkcert, self-signed, or Let's Encrypt options.
   2) Set envs:
-     - `apps/web/.env`: `VITE_SERVER_URL=/api`
+     - `apps/web/.env`: `VITE_SERVER_URL=https://<HOSTNAME>/api`
      - `apps/server/.env`: `WEB_URI=https://<HOSTNAME>` and update OAuth redirects accordingly (e.g., Entra/Google).
   3) Start both together so nginx can proxy to the server container:
      - `docker compose -f docker-compose.server.yml -f docker-compose.web.tls.yml up --build -d`

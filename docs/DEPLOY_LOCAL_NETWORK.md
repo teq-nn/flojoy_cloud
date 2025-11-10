@@ -69,7 +69,7 @@ HTTPS & Entra (Microsoft Login)
     - `location /api { proxy_pass http://flojoy_server:3000; }`
     - `location /auth/entra/ { proxy_pass http://flojoy_server:3000; }`
   - Set envs:
-    - Web: `VITE_SERVER_URL=/api`
+    - Web: `VITE_SERVER_URL=https://<HOSTNAME>/api`
     - Server: `WEB_URI=https://<HOSTNAME>`, `ENTRA_REDIRECT_URI=https://<HOSTNAME>/auth/entra/callback`
   - Register the exact `https://<HOSTNAME>/auth/entra/callback` in Entra App registrations.
 
@@ -78,7 +78,7 @@ Same-Host, Single Compose, and Optional Proxy
   - Server CORS `WEB_URI` must equal `http://<HOST_IP>`.
   - Web `VITE_SERVER_URL` must point to `http://<HOST_IP>:3000` unless you proxy.
 - To avoid rebuilding when the host IP changes, configure nginx to proxy API calls:
-  - Set `VITE_SERVER_URL=/api` in `apps/web/.env` and add to `apps/web/nginx.conf`:
+  - Set `VITE_SERVER_URL=http://<HOST_IP>/api` (or `https://<HOSTNAME>/api` with TLS) in `apps/web/.env` and add to `apps/web/nginx.conf`:
     - `location /api { proxy_pass http://flojoy_server:3000; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; }`
   - Start both stacks in one network:
     - `docker compose -f docker-compose.server.yml -f docker-compose.web.yml up --build -d`
@@ -90,7 +90,7 @@ HTTPS with Nginx
   - `docker-compose.web.tls.yml` (mounts certs from `nginx/certs/` and exposes 443)
 - Steps:
   1) Place `fullchain.pem` and `privkey.pem` in `nginx/certs/`.
-  2) Set web `VITE_SERVER_URL=/api` and server `WEB_URI=https://<HOSTNAME>`.
+  2) Set web `VITE_SERVER_URL=https://<HOSTNAME>/api` and server `WEB_URI=https://<HOSTNAME>`.
   3) Start both services together: `docker compose -f docker-compose.server.yml -f docker-compose.web.tls.yml up --build -d`
   4) Register exact HTTPS callback URIs with identity providers (e.g., Entra: `https://<HOSTNAME>/auth/entra/callback`).
 
