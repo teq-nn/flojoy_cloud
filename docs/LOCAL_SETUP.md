@@ -102,10 +102,10 @@
 - Use the provided TLS config and compose file to serve HTTPS on 443 and proxy API/auth to the server:
   - Config: `apps/web/nginx.tls.conf`
   - Compose: `docker-compose.web.tls.yml`
+  - Certificate guide & scripts: `docs/TLS_CERTS.md`, `scripts/tls/gen-selfsigned.sh`, `scripts/tls/gen-mkcert.sh`
 - Steps:
   1) Generate or obtain certs and place them in `nginx/certs/` as `fullchain.pem` and `privkey.pem`.
-     - mkcert (LAN): `mkcert -install && mkcert <HOSTNAME>` then copy `.pem` files to `nginx/certs`.
-     - Let’s Encrypt: use your ACME client, then place the resulting cert/key there.
+     - See `docs/TLS_CERTS.md` for mkcert, self-signed, or Let's Encrypt options.
   2) Set envs:
      - `apps/web/.env`: `VITE_SERVER_URL=/api`
      - `apps/server/.env`: `WEB_URI=https://<HOSTNAME>` and update OAuth redirects accordingly (e.g., Entra/Google).
