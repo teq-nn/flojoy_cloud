@@ -97,3 +97,18 @@
     - `location /api { proxy_pass http://flojoy_server:3000; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; }`
   - Start both stacks in one network: `docker compose -f docker-compose.server.yml -f docker-compose.web.yml up --build -d`
   - Now the browser uses same-origin `/api` (no CORS), and nginx forwards to the server.
+
+## HTTPS with Nginx (TLS)
+- Use the provided TLS config and compose file to serve HTTPS on 443 and proxy API/auth to the server:
+  - Config: `apps/web/nginx.tls.conf`
+  - Compose: `docker-compose.web.tls.yml`
+- Steps:
+  1) Generate or obtain certs and place them in `nginx/certs/` as `fullchain.pem` and `privkey.pem`.
+     - mkcert (LAN): `mkcert -install && mkcert <HOSTNAME>` then copy `.pem` files to `nginx/certs`.
+     - Let’s Encrypt: use your ACME client, then place the resulting cert/key there.
+  2) Set envs:
+     - `apps/web/.env`: `VITE_SERVER_URL=/api`
+     - `apps/server/.env`: `WEB_URI=https://<HOSTNAME>` and update OAuth redirects accordingly (e.g., Entra/Google).
+  3) Start both together so nginx can proxy to the server container:
+     - `docker compose -f docker-compose.server.yml -f docker-compose.web.tls.yml up --build -d`
+  4) Visit `https://<HOSTNAME>`.

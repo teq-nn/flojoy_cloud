@@ -84,6 +84,16 @@ Same-Host, Single Compose, and Optional Proxy
     - `docker compose -f docker-compose.server.yml -f docker-compose.web.yml up --build -d`
   - Now the UI uses same-origin `/api` and no CORS configuration is required.
 
+HTTPS with Nginx
+- Use the TLS-ready config and compose override when serving over HTTPS:
+  - `apps/web/nginx.tls.conf` (listens on 80 → 443 redirect, and 443 with TLS)
+  - `docker-compose.web.tls.yml` (mounts certs from `nginx/certs/` and exposes 443)
+- Steps:
+  1) Place `fullchain.pem` and `privkey.pem` in `nginx/certs/`.
+  2) Set web `VITE_SERVER_URL=/api` and server `WEB_URI=https://<HOSTNAME>`.
+  3) Start both services together: `docker compose -f docker-compose.server.yml -f docker-compose.web.tls.yml up --build -d`
+  4) Register exact HTTPS callback URIs with identity providers (e.g., Entra: `https://<HOSTNAME>/auth/entra/callback`).
+
 Troubleshooting
 - Ports not reachable from other machines: Ensure host firewalls allow 80 and 3000. Use the host IP (e.g., `192.168.1.x`) not `localhost`.
 - CORS errors: Double-check `WEB_URI` and `VITE_SERVER_URL`. They must be full URLs and correct for your LAN.
