@@ -2,22 +2,29 @@
 FROM oven/bun:1 AS build
 WORKDIR /app
 
-# Copy root locks if needed for workspaces, then the web package
-# Copy root manifests for monorepo context
+# Copy root manifests for monorepo workspaces and package manifests used by web
 COPY bun.lock package.json turbo.json ./
-# Copy web workspace manifest
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/tsconfig/package.json ./packages/tsconfig/
+COPY packages/eslint-config/package.json ./packages/eslint-config/
+COPY apps/server/package.json ./apps/server/
 COPY apps/web/package.json ./apps/web/
 
-WORKDIR /app/apps/web
-# Install without --frozen-lockfile since we may only have bun.lock, not bun.lockb
+# Install all workspace deps at the monorepo root
 RUN bun install
 
 # Build-time env for Vite
 ARG VITE_SERVER_URL=/api
 ENV VITE_SERVER_URL=${VITE_SERVER_URL}
 
-# Copy the rest of the web app source
+# Copy the sources needed for building the web app
+COPY packages/shared ./packages/shared
+COPY packages/tsconfig ./packages/tsconfig
+COPY packages/eslint-config ./packages/eslint-config
 COPY apps/web /app/apps/web
+
+# Build web
+WORKDIR /app/apps/web
 RUN bun run build
 
 # ---------- serve ----------
