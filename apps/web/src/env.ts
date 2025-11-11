@@ -9,7 +9,10 @@ export const env = createEnv({
   clientPrefix: "VITE_",
 
   client: {
-    VITE_SERVER_URL: z.string().url().default("http://localhost:3000"),
+    // Accept either an absolute URL (http/https) or a root-relative path (e.g. "/api")
+    VITE_SERVER_URL: z
+      .union([z.string().url(), z.string().regex(/^\//)])
+      .default("/api"),
   },
 
   /**
