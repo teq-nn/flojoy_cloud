@@ -6,6 +6,12 @@ import path from "path";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), TanStackRouterVite()],
+  server: {
+    // Bind to all interfaces so reverse proxies (e.g., NPM) can reach dev server
+    host: true,
+    port: 5173,
+    strictPort: true,
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
