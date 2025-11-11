@@ -6,7 +6,14 @@ import { env } from "@/env";
 
 export const queryClient = new QueryClient();
 
-export const client = treaty<App>(env.VITE_SERVER_URL, {
+// Build an absolute base URL for treaty. If VITE_SERVER_URL is root-relative
+// (e.g. "/api"), resolve it against the current origin to avoid protocol-
+// relative URLs like "//api/..." which the browser interprets as host "api".
+const baseUrl = env.VITE_SERVER_URL.startsWith("/")
+  ? `${window.location.origin}${env.VITE_SERVER_URL}`
+  : env.VITE_SERVER_URL;
+
+export const client = treaty<App>(baseUrl, {
   async onResponse(response) {
     const json = await response.json();
     const superjsonMeta = response.headers.get("superjson-meta");
