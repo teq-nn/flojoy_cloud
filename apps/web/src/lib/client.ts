@@ -19,7 +19,8 @@ export const client = treaty<App>(env.VITE_SERVER_URL, {
     return val;
   },
   headers: {
-    Origin: env.VITE_SERVER_URL,
+    // Let the browser set a correct Origin automatically.
+    // Only send our custom header used by the server serializer.
     "use-superjson": "true",
   },
   fetch: {
