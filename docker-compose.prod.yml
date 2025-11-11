@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: flojoy_db_prod
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flojoy-cloud
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d flojoy-cloud"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Expose if you need external DB access; otherwise omit
+    # ports: ["5432:5432"]
+
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    image: flojoy_server:prod
+    container_name: flojoy_server_prod
+    env_file:
+      - ./apps/server/.env
+    environment:
+      DATABASE_URL: postgres://user:password@db:5432/flojoy-cloud
+      PORT: 3000
+      NODE_ENV: production
+      # IMPORTANT: set WEB_URI to your public host (no scheme), e.g. example.com
+      # WEB_URI: example.com
+      # If you keep callbacks under /auth/*, use that in your IDP app config
+      # ENTRA_REDIRECT_URI: https://example.com/auth/entra/callback
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "3000"
+    ports:
+      - "3000:3000" # optional; not needed if only accessed via web/nginx
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_SERVER_URL: /api
+    image: flojoy_web:prod
+    container_name: flojoy_web_prod
+    depends_on:
+      server:
+        condition: service_started
+    volumes:
+      # Mount Nginx config to serve SPA + proxy /api and /auth to server
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+volumes:
+  pgdata_prod:
+
