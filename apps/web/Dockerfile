@@ -3,11 +3,14 @@ FROM oven/bun:1 AS build
 WORKDIR /app
 
 # Copy root locks if needed for workspaces, then the web package
-COPY bun.lockb package.json turbo.json ./
-COPY apps/web/package.json apps/web/bun.lockb ./apps/web/
+# Copy root manifests for monorepo context
+COPY bun.lock package.json turbo.json ./
+# Copy web workspace manifest
+COPY apps/web/package.json ./apps/web/
 
 WORKDIR /app/apps/web
-RUN bun install --frozen-lockfile
+# Install without --frozen-lockfile since we may only have bun.lock, not bun.lockb
+RUN bun install
 
 # Build-time env for Vite
 ARG VITE_SERVER_URL=/api
