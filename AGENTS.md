@@ -5,6 +5,7 @@
 - Apps: `apps/server` (Bun + Elysia API), `apps/web` (Vite + React UI).
 - Packages: `packages/shared` (shared code), `packages/tsconfig`, `packages/eslint-config`, `packages/python` (Poetry package with tests).
 - Docs & examples: `docs/`, `examples/`. Environment templates: `.env.example` in root and per app.
+- Key prod doc: `docs/DEPLOY_PROD.md` (single-host compose + Nginx/NPM proxy).
 
 ## Build, Test, and Development Commands
 - Install (JS + Python): `just install` (runs `bun install` and Poetry install).
@@ -34,4 +35,6 @@
 
 ## Security & Configuration Tips
 - Copy `.env.example` to `.env` in root, `apps/server`, and `apps/web`. Never commit secrets.
-- See `docs/LOCAL_SETUP.md` for local configuration details.
+- Local config: `docs/LOCAL_SETUP.md`; LAN/split-host: `docs/DEPLOY_LOCAL_NETWORK.md`; prod single-host: `docs/DEPLOY_PROD.md`.
+- Prod compose (`docker-compose.prod.yml`): web served by internal Nginx, proxies `/api` and `/auth` to server; host port 5173 -> web:80. Use `apps/web/.env` `VITE_SERVER_URL=/api` and `apps/server/.env` `WEB_URI=<public-host>` (no scheme).
+- If fronted by Nginx Proxy Manager/NGINX, forward `<public-host>` to `http://127.0.0.1:5173`; avoid custom locations. To prevent header-size 502s, add location-safe buffer overrides (e.g., `proxy_buffer_size 128k; proxy_buffers 16 256k; proxy_busy_buffers_size 256k; proxy_temp_file_write_size 256k; proxy_read_timeout 300s;`).
