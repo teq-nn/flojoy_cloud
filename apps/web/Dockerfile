@@ -21,6 +21,7 @@ ENV VITE_SERVER_URL=${VITE_SERVER_URL}
 COPY packages/shared ./packages/shared
 COPY packages/tsconfig ./packages/tsconfig
 COPY packages/eslint-config ./packages/eslint-config
+COPY apps/server /app/apps/server
 COPY apps/web /app/apps/web
 
 # Build web
