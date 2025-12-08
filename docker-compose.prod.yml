@@ -58,9 +58,8 @@ services:
       # Mount Nginx config to serve SPA + proxy /api and /auth to server
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
-      - "80:80"
+      - "5173:80"
     restart: unless-stopped
 
 volumes:
   pgdata_prod:
-
