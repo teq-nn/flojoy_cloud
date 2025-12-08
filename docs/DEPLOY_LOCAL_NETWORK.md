@@ -36,7 +36,7 @@ On the machine that will serve the web app:
 
 - Create web env file:
   - Copy `apps/web/.env.example` to `apps/web/.env`.
-  - Set `VITE_SERVER_URL=http://<SERVER_HOST_IP>:3000` (use the server machine's IP so other devices don't call their own `localhost`).
+  - Set `VITE_SERVER_URL=http://<SERVER_HOST_IP>:3000` (use the server machine's IP so other devices don't call their own `localhost`). If you front the API through nginx under the same host, you can use `VITE_SERVER_URL=/api` instead.
 
 - Build and serve the web app:
 
@@ -78,8 +78,7 @@ Same-Host, Single Compose, and Optional Proxy
   - Server CORS `WEB_URI` must equal `http://<HOST_IP>`.
   - Web `VITE_SERVER_URL` must point to `http://<HOST_IP>:3000` unless you proxy.
 - To avoid rebuilding when the host IP changes, configure nginx to proxy API calls:
-  - Set `VITE_SERVER_URL=http://<HOST_IP>/api` (or `https://<HOSTNAME>/api` with TLS) in `apps/web/.env` and add to `apps/web/nginx.conf`:
-    - `location /api { proxy_pass http://flojoy_server:3000; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; }`
+  - Set `VITE_SERVER_URL=http://<HOST_IP>/api` (or `/api` when same-host proxying) in `apps/web/.env`.
   - Start both stacks in one network:
     - `docker compose -f docker-compose.server.yml -f docker-compose.web.yml up --build -d`
   - Now the UI uses same-origin `/api` and no CORS configuration is required.

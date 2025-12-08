@@ -19,7 +19,8 @@
     - `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET`, `ENTRA_REDIRECT_URI`
     - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
 - Web env: create `apps/web/.env` with:
-  - `VITE_SERVER_URL=http://localhost:3000`
+  - `VITE_SERVER_URL=http://localhost:3000` for local dev (separate ports)
+  - For same-origin/proxied setups (e.g., docker compose prod + Nginx), use `VITE_SERVER_URL=/api`
 
 ## Microsoft Entra ID (Microsoft Login)
 1. Microsoft Entra admin center → App registrations → New registration.
@@ -38,10 +39,8 @@
     - `WEB_URI=https://<HOSTNAME>`
     - `ENTRA_REDIRECT_URI=https://<HOSTNAME>/auth/entra/callback`
   - Recommended: proxy the API through nginx on the same HTTPS origin to avoid CORS:
-    - `apps/web/.env` → `VITE_SERVER_URL=https://<HOSTNAME>/api`
-    - In `apps/web/nginx.conf`, add:
-      - `location /api { proxy_pass http://flojoy_server:3000; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; }`
-      - `location /auth/entra/ { proxy_pass http://flojoy_server:3000; proxy_set_header Host $host; }`
+    - `apps/web/.env` → `VITE_SERVER_URL=https://<HOSTNAME>/api` (or `/api` when proxied internally)
+    - The default `nginx/nginx.conf` already proxies `/api` and `/auth` to `server:3000` in the docker stacks.
   - Terminate TLS in nginx (self-signed for LAN via mkcert or a real cert for public). Expose port 443 and point Entra to `https://<HOSTNAME>/auth/entra/callback`.
 
 ## Google OAuth (Google Login)
@@ -92,10 +91,8 @@
 
 ### Optional: Avoid Rebuilds via Proxy
 - You can avoid IP-specific rebuilds by letting nginx proxy to the API:
-  - Set `apps/web/.env` → `VITE_SERVER_URL=http://<HOST_IP>/api` (or `https://<HOSTNAME>/api` with TLS)
-  - In `apps/web/nginx.conf`, add a proxy location (example):
-    - `location /api { proxy_pass http://flojoy_server:3000; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; }`
-  - Start both stacks in one network: `docker compose -f docker-compose.server.yml -f docker-compose.web.yml up --build -d`
+  - Set `apps/web/.env` → `VITE_SERVER_URL=http://<HOST_IP>/api` (or `https://<HOSTNAME>/api` with TLS, or just `/api` when proxied on the same host)
+  - Start both stacks in one network: `docker compose -f docker-compose.server.yml -f docker-compose.web.yml up --build -d` (uses the repo nginx config to proxy `/api` and `/auth` to the server)
   - Now the browser uses same-origin `/api` (no CORS), and nginx forwards to the server.
 
 ## HTTPS with Nginx (TLS)
